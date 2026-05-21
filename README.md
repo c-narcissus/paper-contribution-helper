@@ -2,9 +2,9 @@
 
 `paper-contribution-helper skill`（中文名：论文贡献助手）是给 **A+B+C 式组合创新**、增量创新、工程创新、轻改迁移和旧方法新场景适配类论文准备的 Codex 投稿辅助 skill 工厂。很多研究生和早期科研作者并不是“没有做东西”，而是论文贡献容易被写成“把 A、B、C 拼在一起”，导致审稿人质疑 novelty 不够、只是 incremental、机制证据不足、baseline 不公平或 scope 过大。这个 skill 就是为了解决“工作做了，但贡献讲不清、审稿防不住”的痛点：把已有方法、实验和约束重新组织成更清楚、更强、更可防守的投稿叙事。感谢 University of Bristol 的刘欣阳同学提供 SemiDFL 素材支持。
 
-它有两种核心用法：一种是直接利用主包内置的贡献包装知识库分析当前论文，快速得到 contribution framing、novelty defense、reviewer attack preplay 和 revision plan；另一种是在 **Codex 中**把目标论文作为 seed，自动收集同领域论文、reviews、author replies 和 meta-reviews，生成一个可反复复用的领域专用 helper skill，后续同方向论文可以继续用这个 child skill 做贡献包装和审稿防守。注意：**ChatGPT 网页版不能生成领域专用 helper skill**，只能直接使用主包内置知识库分析论文，或使用已经在 Codex 中生成好的 child skill。
-
 ![paper-contribution-helper skill architecture, Chinese](paper-contribution-helper-skill-architecture-zh.png)
+
+它有两种核心用法：一种是直接利用主包内置的贡献包装知识库分析当前论文，快速得到 contribution framing、novelty defense、reviewer attack preplay 和 revision plan；另一种是在 **Codex 中**把目标论文作为 seed，自动收集同领域论文、reviews、author replies 和 meta-reviews，生成一个可反复复用的领域专用 helper skill，后续同方向论文可以继续用这个 child skill 做贡献包装和审稿防守。注意：**ChatGPT 网页版不能生成领域专用 helper skill**，只能直接使用主包内置知识库分析论文，或使用已经在 Codex 中生成好的 child skill。
 
 SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个模块”，而是把论文从 **component-combination paper** 改写成 **interface-closure paper**。
 
@@ -162,9 +162,9 @@ SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, a
 
 `paper-contribution-helper skill` is a Codex skill factory for **A+B+C-style component-combination papers**, incremental papers, engineering-optimization papers, light method-transfer papers, and old-method-new-setting adaptation papers. Many graduate students and early-career researchers have real methods and experiments, but their papers are written as “we combine A, B, and C,” which makes reviewers attack novelty, incrementalism, mechanism evidence, baseline fairness, or scope. This skill is built for that pain point: it helps turn existing methods, experiments, and constraints into a clearer, stronger, evidence-grounded contribution narrative. Thanks to Xinyang Liu from the University of Bristol for providing the SemiDFL materials.
 
-There are two core ways to use it. First, you can directly use the main package’s built-in contribution-framing knowledge base to analyze a target paper and quickly obtain contribution framing, novelty defense, reviewer attack preplay, and revision plans. Second, **in Codex**, you can use the target paper as a seed, collect related papers, reviews, author replies, and meta-reviews, then generate a reusable domain-specific helper skill for future papers in the same area. **ChatGPT web cannot generate a domain-specific helper skill**; it can only directly use the main package’s built-in knowledge base, or use a child skill already generated in Codex.
-
 ![paper-contribution-helper skill architecture, English](paper-contribution-helper-skill-architecture-en.png)
+
+There are two core ways to use it. First, you can directly use the main package’s built-in contribution-framing knowledge base to analyze a target paper and quickly obtain contribution framing, novelty defense, reviewer attack preplay, and revision plans. Second, **in Codex**, you can use the target paper as a seed, collect related papers, reviews, author replies, and meta-reviews, then generate a reusable domain-specific helper skill for future papers in the same area. **ChatGPT web cannot generate a domain-specific helper skill**; it can only directly use the main package’s built-in knowledge base, or use a child skill already generated in Codex.
 
 In the SemiDFL example, the key rewrite is not to keep emphasizing “we combine several modules,” but to move the paper from a **component-combination paper** to an **interface-closure paper**.
 
