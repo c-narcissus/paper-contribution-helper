@@ -6,6 +6,12 @@
 
 它有两种核心用法：一种是直接利用主包内置的贡献包装知识库分析当前论文，快速得到 contribution framing、novelty defense、reviewer attack preplay 和 revision plan；另一种是在 **Codex 中**把目标论文作为 seed，自动收集同领域论文、reviews、author replies 和 meta-reviews，生成一个可反复复用的领域专用 helper skill，后续同方向论文可以继续用这个 child skill 做贡献包装和审稿防守。注意：**ChatGPT 网页版不能生成领域专用 helper skill**，只能直接使用主包内置知识库分析论文，或使用已经在 Codex 中生成好的 child skill。
 
+注意：如果 Codex 过程中断，并显示类似“还没有生成最终 skill zip。原因是当前环境没有 OPENAI_API_KEY、acpx 或本地 LLM 后端”的信息，请回复：
+
+```text
+不对啊。我这里说了使用 Codex 来编排进行深度阅读。
+```
+
 SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个模块”，而是把论文从 **component-combination paper** 改写成 **interface-closure paper**。
 
 | 容易被读成 | 更强的贡献叙事 |
@@ -80,6 +86,13 @@ SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个
 
 1. 以 `semidfl.pdf` 作为目标论文输入；
 2. 使用 `paper-contribution-helper skill` 分析 SemiDFL 的 contribution、novelty 风险和审稿防守点；
+
+   注意：如果 Codex 过程中断，并显示类似“还没有生成最终 skill zip。原因是当前环境没有 OPENAI_API_KEY、acpx 或本地 LLM 后端”的信息，请回复：
+
+   ```text
+   不对啊。我这里说了使用 Codex 来编排进行深度阅读。
+   ```
+
 3. 生成 SemiDFL 领域专用 helper skill：`semidfl-contribution-helper.zip`；
 4. 在 Codex 中使用生成出的 `semidfl-contribution-helper.zip` 继续分析 SemiDFL；
 5. 在 ChatGPT 网页版中分别测试主包直接分析和使用已生成 helper skill 分析两种方式。
@@ -166,6 +179,12 @@ SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, a
 
 There are two core ways to use it. First, you can directly use the main package’s built-in contribution-framing knowledge base to analyze a target paper and quickly obtain contribution framing, novelty defense, reviewer attack preplay, and revision plans. Second, **in Codex**, you can use the target paper as a seed, collect related papers, reviews, author replies, and meta-reviews, then generate a reusable domain-specific helper skill for future papers in the same area. **ChatGPT web cannot generate a domain-specific helper skill**; it can only directly use the main package’s built-in knowledge base, or use a child skill already generated in Codex.
 
+Note: If the Codex run stops with a message like “The final skill zip has not been generated. The reason is that the current environment does not have OPENAI_API_KEY, acpx, or a local LLM backend,” reply:
+
+```text
+No, that is not right. I said to use Codex to orchestrate the deep-reading process.
+```
+
 In the SemiDFL example, the key rewrite is not to keep emphasizing “we combine several modules,” but to move the paper from a **component-combination paper** to an **interface-closure paper**.
 
 | Easy to Read As | Stronger Contribution Narrative |
@@ -240,6 +259,13 @@ The example workflow is:
 
 1. Use `semidfl.pdf` as the target paper.
 2. Use `paper-contribution-helper skill` to analyze SemiDFL’s contribution, novelty risks, and reviewer defenses.
+
+   Note: If the Codex run stops with a message like “The final skill zip has not been generated. The reason is that the current environment does not have OPENAI_API_KEY, acpx, or a local LLM backend,” reply:
+
+   ```text
+   No, that is not right. I said to use Codex to orchestrate the deep-reading process.
+   ```
+
 3. Generate the SemiDFL-specific helper skill: `semidfl-contribution-helper.zip`.
 4. In Codex, use the generated `semidfl-contribution-helper.zip` to continue analyzing SemiDFL.
 5. In ChatGPT web, test two supported modes: direct analysis with the main package, and analysis with the already generated helper skill.
