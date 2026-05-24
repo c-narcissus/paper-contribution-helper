@@ -1,4 +1,0 @@
-interface:
-  display_name: "paper-contribution-helper"
-  short_description: "Help researchers package paper contributions"
-  default_prompt: "Use $paper-contribution-helper. Start with the required opening message only; do not answer my substantive request until I reply again."
