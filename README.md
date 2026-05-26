@@ -2,8 +2,6 @@
 
 `paper-contribution-helper skill`（中文名：论文贡献助手）是给 **A+B+C 式组合创新**、增量创新、工程创新、轻改迁移和旧方法新场景适配类论文准备的 Codex 投稿辅助 skill 工厂。很多研究生和早期科研作者并不是“没有做东西”，而是论文贡献容易被写成“把 A、B、C 拼在一起”，导致审稿人质疑 novelty 不够、只是 incremental、机制证据不足、baseline 不公平或 scope 过大。这个 skill 就是为了解决“工作做了，但贡献讲不清、审稿防不住”的痛点：把已有方法、实验和约束重新组织成更清楚、更强、更可防守的投稿叙事。感谢 University of Bristol 的刘欣阳同学提供 SemiDFL 素材支持。
 
-> 版本说明：本文档主体内容仍以 `paper-contribution-helper v1.0.2` 的原始使用说明为主。`paper-contribution-helper v1.0.8` 重点优化了**报告输出体验**：默认报告改为更直白的师生交流式写法，先讲结论、再讲原因和修改建议。建议优先使用 `paper-contribution-helper v1.0.8`；使用方法与 v1.0.2 一样。
-
 ![paper-contribution-helper skill architecture, Chinese](paper-contribution-helper-skill-architecture-zh.png)
 
 它有两种核心用法：一种是直接利用主包内置的贡献包装知识库分析当前论文，快速得到 contribution framing、novelty defense、reviewer attack preplay 和 revision plan；另一种是在 **Codex 中**把目标论文作为 seed，自动收集同领域论文、reviews、author replies 和 meta-reviews，生成一个可反复复用的领域专用 helper skill，后续同方向论文可以继续用这个 child skill 做贡献包装和审稿防守。注意：**ChatGPT 网页版不能生成领域专用 helper skill**，只能直接使用主包内置知识库分析论文，或使用已经在 Codex 中生成好的 child skill。
@@ -78,11 +76,9 @@ SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个
 
 ## SemiDFL 样例测试结果
 
-`example_semiDFL_v1.0.2/` 是原始 v1.0.2 端到端样例，README 主体仍按这套流程说明：先如何用主包生成 SemiDFL 领域专用 helper skill，再如何在 Codex 和 ChatGPT 网页版中使用这个生成出的 helper skill 分析论文。`example_semiDFL_v1.0.8/` 是同一 SemiDFL 样例在 v1.0.8 下的更新结果，建议优先查看它的报告输出效果。
+`example_semiDFL/` 是一个端到端样例，重点展示两件事：先如何用主包生成 SemiDFL 领域专用 helper skill，再如何在 Codex 和 ChatGPT 网页版中使用这个生成出的 helper skill 分析论文。
 
-**v1.0.2 完整优化报告看这里：[`example_semiDFL_v1.0.2/semidfl-reframing-report.md`](example_semiDFL_v1.0.2/semidfl-reframing-report.md)。**
-
-**v1.0.8 推荐报告看这里：[`example_semiDFL_v1.0.8/semidfl_contribution_report.md`](example_semiDFL_v1.0.8/semidfl_contribution_report.md)。**
+**完整优化报告看这里：[`example_semiDFL/semidfl-reframing-report.md`](example_semiDFL/semidfl-reframing-report.md)。**
 
 本次样例中，领域语料刻意选用 2023、2024 年的论文，是因为 SemiDFL 本身是 2025 年论文。为了模拟真实投稿前只能参考既有公开工作的设定，避免把目标论文之后或同期的材料反向泄漏进领域 helper skill，所以样例只使用目标论文发表前的领域文章。领域文章数量有限不是因为该方向文献很少，而是因为本次演示 token 额度不够；实际使用时可以根据预算扩大年份范围、会议来源和每年论文数量。
 
@@ -101,25 +97,17 @@ SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个
 4. 在 Codex 中使用生成出的 `semidfl-contribution-helper.zip` 继续分析 SemiDFL；
 5. 在 ChatGPT 网页版中分别测试主包直接分析和使用已生成 helper skill 分析两种方式。
 
-v1.0.2 样例产物包括：
+样例产物包括：
 
-- `example_semiDFL_v1.0.2/semidfl.pdf`：样例中用来分析的目标论文；
-- `example_semiDFL_v1.0.2/semidfl-reframing-report.md`：v1.0.2 最终生成的论文优化报告；
-- `example_semiDFL_v1.0.2/semidfl-contribution-helper.zip`：根据 SemiDFL 生成的领域专用 helper skill；
-- `example_semiDFL_v1.0.2/codex-child-skill-generation-and-analysis.mp4`：在 Codex 中生成并使用领域专用 helper skill 的完整记录；
-- `example_semiDFL_v1.0.2/chatgpt-web-main-skill-direct-analysis.mhtml`：在 ChatGPT 网页版中使用 `paper-contribution-helper skill` 内置知识库直接分析论文的过程；
-- `example_semiDFL_v1.0.2/chatgpt-web-semidfl-helper-analysis.mhtml`：在 ChatGPT 网页版中使用 `semidfl-contribution-helper.zip` 分析论文的过程。
+- `semidfl.pdf`：样例中用来分析的目标论文；
+- `semidfl-reframing-report.md`：最终生成的论文优化报告；
+- `semidfl-contribution-helper.zip`：根据 SemiDFL 生成的领域专用 helper skill；
+- `codex-child-skill-generation-and-analysis.mp4`：在 Codex 中生成并使用领域专用 helper skill 的完整记录；
+- `chatgpt-web-main-skill-direct-analysis.mhtml`：在 ChatGPT 网页版中使用 `paper-contribution-helper skill` 内置知识库直接分析论文的过程；
+- `chatgpt-web-semidfl-helper-analysis.mhtml`：在 ChatGPT 网页版中使用 `semidfl-contribution-helper.zip` 分析论文的过程；
+- `example-file-manifest.txt`：样例目录文件说明。
 
-v1.0.8 样例产物包括：
-
-- `example_semiDFL_v1.0.8/semidfl.pdf`：同一篇 SemiDFL 目标论文；
-- `example_semiDFL_v1.0.8/semidfl_contribution_report.md`：v1.0.8 生成的贡献包装报告，输出风格更偏直接的师生交流式说明；
-- `example_semiDFL_v1.0.8/fl-ssl-neurips-icml-2025-helper.zip`：v1.0.8 生成的联邦学习 / 半监督学习方向 helper skill；
-- `example_semiDFL_v1.0.8/codex-child-skill-generation-and-analysis.mp4`：在 Codex 中生成并使用新版领域 helper skill 的记录；
-- `example_semiDFL_v1.0.8/chatgpt-web-main-skill-direct-analysis.mhtml`：在 ChatGPT 网页版中使用主包内置知识库直接分析论文的过程；
-- `example_semiDFL_v1.0.8/chatgpt-web-semidfl-helper-analysis.mhtml`：在 ChatGPT 网页版中使用 v1.0.8 生成 helper skill 分析论文的过程。
-
-报告中对 SemiDFL 的关键改写来自 v1.0.2 的 `semidfl-reframing-report.md`：
+报告中对 SemiDFL 的关键改写来自 `semidfl-reframing-report.md`：
 
 ```text
 SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, and builds a three-level consensus mechanism: label consensus for noisy pseudo supervision, data-space consensus for non-shareable heterogeneous data, and model-space consensus for aggregation without shared validation data.
@@ -186,8 +174,6 @@ SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, a
 ## English README
 
 `paper-contribution-helper skill` is a Codex skill factory for **A+B+C-style component-combination papers**, incremental papers, engineering-optimization papers, light method-transfer papers, and old-method-new-setting adaptation papers. Many graduate students and early-career researchers have real methods and experiments, but their papers are written as “we combine A, B, and C,” which makes reviewers attack novelty, incrementalism, mechanism evidence, baseline fairness, or scope. This skill is built for that pain point: it helps turn existing methods, experiments, and constraints into a clearer, stronger, evidence-grounded contribution narrative. Thanks to Xinyang Liu from the University of Bristol for providing the SemiDFL materials.
-
-> Version note: The main README still follows the original `paper-contribution-helper v1.0.2` usage flow. `paper-contribution-helper v1.0.8` mainly improves the **report output experience**: the default report is more direct and student-advisor-like, with conclusions first, then reasons and revision suggestions. `paper-contribution-helper v1.0.8` is recommended for use; its usage is the same as v1.0.2.
 
 ![paper-contribution-helper skill architecture, English](paper-contribution-helper-skill-architecture-en.png)
 
@@ -263,11 +249,9 @@ The internal resources stay simple: `SKILL.md` controls entry points, rules, and
 
 ### SemiDFL Example Results
 
-`example_semiDFL_v1.0.2/` is the original v1.0.2 end-to-end example, and the main README still follows this flow: how to generate a SemiDFL-specific helper skill from the main package, then how to use that generated helper skill in Codex and ChatGPT web. `example_semiDFL_v1.0.8/` is the same SemiDFL example rerun with v1.0.8, and its report output is recommended for review.
+`example_semiDFL/` is an end-to-end example. It shows two things in order: how to generate a SemiDFL-specific helper skill from the main package, and how to use that generated helper skill in Codex and ChatGPT web.
 
-**v1.0.2 full optimization report: [`example_semiDFL_v1.0.2/semidfl-reframing-report.md`](example_semiDFL_v1.0.2/semidfl-reframing-report.md).**
-
-**v1.0.8 recommended report: [`example_semiDFL_v1.0.8/semidfl_contribution_report.md`](example_semiDFL_v1.0.8/semidfl_contribution_report.md).**
+**Full optimization report: [`example_semiDFL/semidfl-reframing-report.md`](example_semiDFL/semidfl-reframing-report.md).**
 
 In this example, the domain corpus intentionally uses papers from 2023 and 2024 because SemiDFL is a 2025 paper. To simulate a realistic pre-submission setting where only earlier public work is available, and to avoid leaking later or contemporaneous material back into the domain helper skill, the example only uses papers published before the target paper. The domain corpus is small not because the area lacks papers, but because this public demo did not have enough token budget; in actual use, the year range, venues, and number of papers per year can be expanded according to the available budget.
 
@@ -286,25 +270,17 @@ The example workflow is:
 4. In Codex, use the generated `semidfl-contribution-helper.zip` to continue analyzing SemiDFL.
 5. In ChatGPT web, test two supported modes: direct analysis with the main package, and analysis with the already generated helper skill.
 
-v1.0.2 example artifacts:
+Example artifacts:
 
-- `example_semiDFL_v1.0.2/semidfl.pdf`: target paper used in the example;
-- `example_semiDFL_v1.0.2/semidfl-reframing-report.md`: final v1.0.2 paper optimization report;
-- `example_semiDFL_v1.0.2/semidfl-contribution-helper.zip`: SemiDFL-specific generated helper skill;
-- `example_semiDFL_v1.0.2/codex-child-skill-generation-and-analysis.mp4`: full Codex recording for generating and using the child skill;
-- `example_semiDFL_v1.0.2/chatgpt-web-main-skill-direct-analysis.mhtml`: ChatGPT web process using the main package’s built-in knowledge base;
-- `example_semiDFL_v1.0.2/chatgpt-web-semidfl-helper-analysis.mhtml`: ChatGPT web process using `semidfl-contribution-helper.zip`.
+- `semidfl.pdf`: target paper used in the example;
+- `semidfl-reframing-report.md`: final paper optimization report;
+- `semidfl-contribution-helper.zip`: SemiDFL-specific generated helper skill;
+- `codex-child-skill-generation-and-analysis.mp4`: full Codex recording for generating and using the child skill;
+- `chatgpt-web-main-skill-direct-analysis.mhtml`: ChatGPT web process using the main package’s built-in knowledge base;
+- `chatgpt-web-semidfl-helper-analysis.mhtml`: ChatGPT web process using `semidfl-contribution-helper.zip`;
+- `example-file-manifest.txt`: file manifest for the example folder.
 
-v1.0.8 example artifacts:
-
-- `example_semiDFL_v1.0.8/semidfl.pdf`: the same SemiDFL target paper;
-- `example_semiDFL_v1.0.8/semidfl_contribution_report.md`: v1.0.8 contribution-framing report with a more direct student-advisor-style output;
-- `example_semiDFL_v1.0.8/fl-ssl-neurips-icml-2025-helper.zip`: v1.0.8 generated helper skill for federated learning / semi-supervised learning;
-- `example_semiDFL_v1.0.8/codex-child-skill-generation-and-analysis.mp4`: Codex recording for generating and using the updated domain helper skill;
-- `example_semiDFL_v1.0.8/chatgpt-web-main-skill-direct-analysis.mhtml`: ChatGPT web process using the main package’s built-in knowledge base;
-- `example_semiDFL_v1.0.8/chatgpt-web-semidfl-helper-analysis.mhtml`: ChatGPT web process using the v1.0.8 generated helper skill.
-
-Key SemiDFL rewrite from the v1.0.2 `semidfl-reframing-report.md`:
+Key SemiDFL rewrite from `semidfl-reframing-report.md`:
 
 ```text
 SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, and builds a three-level consensus mechanism: label consensus for noisy pseudo supervision, data-space consensus for non-shareable heterogeneous data, and model-space consensus for aggregation without shared validation data.
