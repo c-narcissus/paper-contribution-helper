@@ -1,369 +1,385 @@
-# 论文贡献助手
+# 论文贡献助手 v1.1.12
 
-`paper-contribution-helper skill`（中文名：论文贡献助手）是给 **A+B+C 式组合创新**、增量创新、工程创新、轻改迁移和旧方法新场景适配类论文准备的 Codex 投稿辅助 skill 工厂。很多研究生和早期科研作者并不是“没有做东西”，而是论文贡献容易被写成“把 A、B、C 拼在一起”，导致审稿人质疑 novelty 不够、只是 incremental、机制证据不足、baseline 不公平或 scope 过大。这个 skill 就是为了解决“工作做了，但贡献讲不清、审稿防不住”的痛点：把已有方法、实验和约束重新组织成更清楚、更强、更可防守的投稿叙事。感谢 University of Bristol 的刘欣阳同学提供 SemiDFL 素材支持。
+`paper-contribution-helper skill`（中文名：论文贡献助手）是一个面向科研论文投稿前修改的 Codex skill 工厂，适合 **A+B+C 式组合创新**、增量创新、工程优化、轻量迁移、旧方法新场景适配，以及“工作做了但贡献讲不清”的论文。它的目标不是替作者编造 novelty，而是把论文里已经存在的方法、实验、约束和失败模式重新组织成更清楚、更强、更可防守的投稿叙事。感谢 University of Bristol 的刘欣阳同学提供 SemiDFL 素材支持，也感谢严世军和刘威丁提供的协助
 
-> 版本说明：本文档主体内容仍以 `paper-contribution-helper v1.0.2` 的原始使用说明为主。`paper-contribution-helper v1.0.8` 重点优化了**报告输出体验**：默认报告改为更直白的师生交流式写法，先讲结论、再讲原因和修改建议。建议优先使用 `paper-contribution-helper v1.0.8`；使用方法与 v1.0.2 一样。
+当前说明只介绍 `paper-contribution-helper v1.1.12`。旧版本材料、旧 README、旧架构图和旧 SemiDFL 样例统一归档在 [`old_versions/`](old_versions/) 文件夹下。
 
-![paper-contribution-helper skill architecture, Chinese](paper-contribution-helper-skill-architecture-zh.png)
+当前主包：[`paper-contribution-helper-v1.1.12.zip`](paper-contribution-helper-v1.1.12.zip)
 
-它有两种核心用法：一种是直接利用主包内置的贡献包装知识库分析当前论文，快速得到 contribution framing、novelty defense、reviewer attack preplay 和 revision plan；另一种是在 **Codex 中**把目标论文作为 seed，自动收集同领域论文、reviews、author replies 和 meta-reviews，生成一个可反复复用的领域专用 helper skill，后续同方向论文可以继续用这个 child skill 做贡献包装和审稿防守。注意：**ChatGPT 网页版不能生成领域专用 helper skill**，只能直接使用主包内置知识库分析论文，或使用已经在 Codex 中生成好的 child skill。
+![paper-contribution-helper v1.1.12 架构图](paper-contribution-helper-skill-architecture-zh.png)
 
-注意：如果 Codex 过程中断，并显示类似“还没有生成最终 skill zip。原因是当前环境没有 OPENAI_API_KEY、acpx 或本地 LLM 后端”的信息，请回复：
+## 核心价值
 
-```text
-不对啊。我这里说了使用 Codex 来编排进行深度阅读。
-```
+这类论文往往不是“没有贡献”，而是容易被 reviewer 读成：
 
-SemiDFL 样例里，最关键的改写不是继续强调“我们组合了几个模块”，而是把论文从 **component-combination paper** 改写成 **interface-closure paper**。
-
-| 容易被读成 | 更强的贡献叙事 |
-| --- | --- |
-| 把 NPL、diffusion MixUp、AdaGen 拼在一起 | semi-supervised DFL 缺少三个 consensus interfaces，SemiDFL 分别闭合 label-space、data-space、model-space 三个接口 |
-| 实验只是报告 accuracy 更高 | 实验围绕 reviewer 会追问的失败模式组织：label scarcity、non-IID robustness、pseudo-supervision quality、data-space consensus、model-space consensus |
-
-这样写的好处是：不需要编造新实验，也不把已有工作降格成“简单组合”，而是把论文真实解决的问题、已有证据和审稿防守点对齐起来。
-
-核心原则是 **强而诚实**：不编造、不夸大、不脱离论文内容，而是最大化挖掘论文中真实存在但没有讲透的亮点，让“看起来只是组合、增量或工程优化”的工作，尽可能变成清楚、有边界、可防守的投稿叙事。
-
-## 为什么需要它
-
-这类论文往往不是不能投，而是比较难中。审稿人很容易把它们读成“已有方法 A+B+C 的组合”“只是在旧方法上做小改动”“工程系统堆得完整但科学问题不清楚”。一旦论文没有提前把贡献边界、必要性和机制证据讲清楚，reviewer 就会集中攻击：
-
-- novelty 不够，像是 incremental tweak；
-- 方法只是已有组件的直接拼接；
-- contribution 写成了“我们加了 A、B、C 三个模块”；
-- related work 没有划清和已有工作的关键边界；
-- ablation 做了，但没有说明每个模块对应解决什么失败模式；
-- baseline fairness、scope、cost、reproducibility 没有提前防守；
+- 只是把已有模块 A、B、C 拼在一起；
+- 只是旧方法在新场景里的小改动；
+- 工程系统完整，但科学问题、失败模式和机制证据不够清楚；
+- 实验结果不错，但没有说明每个模块到底回答了哪个审稿问题；
 - rebuttal 只能写成空泛的 “we clarify” 或 “we will add discussion”。
 
-这个 skill 的目标就是把这些风险提前暴露出来，并把论文已有材料重新组织成更清楚、更可防守的投稿叙事。
+v1.1.12 的核心原则是 **强而诚实**：不编造、不夸大、不脱离论文证据，而是把真实贡献讲清楚、讲准、讲得更可防守。它会把 target paper、相关工作、实验表格、reviewer 攻击、最小补实验计划和可替换文本放在同一条修改闭环里处理。
 
-## 它能帮你做什么
+## v1.1.12 能做什么
 
-### 1. 直接分析目标论文
+### 1. 三种工作模式
 
-适合你已经有一篇论文 PDF，想知道它应该怎么讲得更强。
+启动 skill 后，v1.1.12 会先要求用户明确选择工作模式，不会替用户自动判断：
 
-输出重点包括：
+| 模式 | 用途 |
+|---|---|
+| 模式1 | 构建新的专业子 skill：以目标论文、相关工作、本地 PDF 或指定来源语料为种子，生成可复用领域 helper。 |
+| 模式2 | 使用主包内置知识库分析论文：不生成新 skill，直接对当前 PDF 做贡献、风险、证据和改稿分析。 |
+| 模式3 | 更新/扩展已有专业子 skill：把新论文、新 reviews、新语料或新流程合并进已有 child skill，并做继承回归检查。 |
 
-- 当前论文最容易被攻击成哪种增量风险；
-- 真正可防守的贡献层级是什么；
-- 哪些亮点已经在论文里存在，但作者没有讲透；
-- abstract、introduction、contribution bullets、related work、method overview 应该怎么改；
-- reviewer 可能如何攻击 novelty、A+B/C、baseline、mechanism、experiment、reproducibility；
-- 不增加实验时怎么修改，必须增加实验时优先补什么；
-- rebuttal 里哪些话可以说，哪些危险话术要避免。
+生成出的专业子 skill 会保留更窄的使用界面：通常是 `模式A1` 直接分析论文，`模式A2` 更新/扩展该子 skill。
 
-### 2. 自动生成领域专用 helper skill
+### 2. A-D 分析方向
 
-适合你后续还要写同方向论文，或者希望为一个研究方向沉淀可复用经验。
+分析方向可以组合，例如 `A+B+C+D`：
 
-它可以根据目标论文自动推断领域/子领域，再从参考论文、reviews、author replies 和 meta-reviews 中提取匿名案例，生成一个领域专用 skill。这个生成出的 skill 可以继续辅助同类论文：
+| 方向 | 关注点 |
+|---|---|
+| A | 贡献与相关工作：novelty、A+B+C/增量风险、closest prior、baseline、claim-evidence-risk。 |
+| B | 分层改稿与科学升维：L0-L4，从句子/结构修改，到 failure mode、broken assumption、scientific question。 |
+| C | 审稿防守与执行闭环：reviewer/AC 攻击、最小决定性实验、可替换文本、revision loop。 |
+| D | 文献与前沿定位：动态元图、多跳检索计划、文献防幻觉、质量门槛、本地知识库/子方向沉淀。 |
 
-- 复用该领域常见的强包装方式；
-- 复用 reviewer 常见攻击模式；
-- 复用有效 rebuttal 模式；
-- 复用匿名案例中的 story route 和防守逻辑。
+### 3. 直接分析目标论文
 
-## 架构图介绍
+模式2 适合已经有论文 PDF，需要快速知道“怎么改得更像一篇能投的论文”。v1.1.12 会先做两个门控：
 
-上方中文架构图是 `paper-contribution-helper` 这个 skill / skill factory 的整体架构图，不是 SemiDFL 领域专用 helper skill 的架构图。
+- **相关工作门控**：询问作者是否有 closest prior、害怕被比较的论文、baseline、reviewer concerns 或 reviews/replies；如果没有，会从目标论文自己的 related work、references、实验设置和 frontier claims 里建立检索计划。
+- **投稿上下文门控**：收集或假设目标 venue/journal、deadline、页数预算、实验预算和风险姿态。
 
-图里的核心逻辑是：左边输入目标论文和已有材料，中间的 `paper-contribution-helper` 负责诊断贡献风险、挖掘已有亮点、预演审稿攻击、给出分层修改方案，并把经验沉淀成领域专用 helper skill；右边的生成 skill 则把该领域的匿名案例、常见审稿问题、rebuttal 模式和 story routes 固化下来，方便后续同类论文复用。
+最终报告会尽量给出可执行内容：
 
-模块贡献很直接：贡献诊断告诉你论文会被怎样质疑，亮点挖掘帮你找回已经存在但没讲透的价值，审稿预演提前暴露 novelty、A+B/C、baseline 和 mechanism 风险，分层修改给出从“完全不补实验”到“新增证据”的不同方案，领域生成则把这次经验变成可复用的方向级助手。
+- 论文最可能被攻击成哪类增量或组合风险；
+- 当前最可防守的贡献主线；
+- claim-evidence-risk map；
+- related work 边界与 closest prior 对照；
+- abstract、introduction、contribution bullets、method overview、figure/table caption 的改写方向；
+- reviewer/AC 攻击预演；
+- 最小决定性实验，而不是泛泛地“多做实验”；
+- rebuttal-safe wording 和危险话术提醒；
+- 下一版 manuscript 的 revision loop 检查点。
 
-内部资源的作用也保持简单：`SKILL.md` 管入口、规则和输出格式；`references/` 放贡献包装方法、匿名案例、审稿攻击和 rebuttal 模式；`scripts/` 用于整理材料、抽取案例和打包校验；`assets/` 提供生成领域 skill 的模板与结构。打包资源中，`paper-contribution-helper-v1.0.2.zip` 是 `paper-contribution-helper skill` 的 v1.0.2 打包文件。
+### 4. 构建或更新专业子 skill
 
-## SemiDFL 样例测试结果
+模式1/3 适合为某个研究方向沉淀可复用经验。v1.1.12 要求明确给出：
 
-`example_semiDFL_v1.0.2/` 是原始 v1.0.2 端到端样例，README 主体仍按这套流程说明：先如何用主包生成 SemiDFL 领域专用 helper skill，再如何在 Codex 和 ChatGPT 网页版中使用这个生成出的 helper skill 分析论文。`example_semiDFL_v1.0.8/` 是同一 SemiDFL 样例在 v1.0.8 下的更新结果，建议优先查看它的报告输出效果。
+- 研究领域：一个或多个；
+- 年份或年份范围；
+- 每年数量；
+- 来源会议、期刊、官网、数据库，或本地 PDF/project-run；
+- 模式3 还需要已有子 skill。
 
-**v1.0.2 完整优化报告看这里：[`example_semiDFL_v1.0.2/semidfl-reframing-report.md`](example_semiDFL_v1.0.2/semidfl-reframing-report.md)。**
+v1.1.12 的语料规则很重要：多个研究领域、多个年份、多个来源、多个本地资料默认是 **OR 候选池**，不是 AND 交集过滤。例如“联邦学习 + 半监督学习，2023 + 2024，来源 ICLR”表示从这些候选池里做均衡筛选；如果你真的要交集，必须明确写“只取交集”。
 
-**v1.0.8 推荐报告看这里：[`example_semiDFL_v1.0.8/semidfl_contribution_report.md`](example_semiDFL_v1.0.8/semidfl_contribution_report.md)。**
+当给出多个领域和多个年份时，它会按 `field × year` 尽量均衡分配每年数量；如果某个格子没有足够高质量论文，会诚实报告 quota gap，而不是用弱相关论文硬填。
 
-本次样例中，领域语料刻意选用 2023、2024 年的论文，是因为 SemiDFL 本身是 2025 年论文。为了模拟真实投稿前只能参考既有公开工作的设定，避免把目标论文之后或同期的材料反向泄漏进领域 helper skill，所以样例只使用目标论文发表前的领域文章。领域文章数量有限不是因为该方向文献很少，而是因为本次演示 token 额度不够；实际使用时可以根据预算扩大年份范围、会议来源和每年论文数量。
+### 5. 无后端时继续工作
 
-样例流程按顺序是：
+如果已经有 PDF、reviews、replies、metadata 或 project-run，v1.1.12 会优先从本地项目文件继续处理。缺少 `OPENAI_API_KEY`、ACP/acpx 或本地 LLM 后端，不会自动变成终止理由；它会切换到当前助手可执行的本地深读协议，生成 assistant-readable packets、深读 JSONL、manifest，再恢复匿名知识合成和打包。
 
-1. 以 `semidfl.pdf` 作为目标论文输入；
-2. 使用 `paper-contribution-helper skill` 分析 SemiDFL 的 contribution、novelty 风险和审稿防守点；
+如果用户允许 Codex/ChatGPT worker 分工阅读，v1.1.12 也支持通过文件协议分发每篇论文的深读任务，收集 worker 写回的 JSON 记录，再继续构建子 skill。
 
-   注意：如果 Codex 过程中断，并显示类似“还没有生成最终 skill zip。原因是当前环境没有 OPENAI_API_KEY、acpx 或本地 LLM 后端”的信息，请回复：
+### 6. 子 skill 继承和回归检查
 
-   ```text
-   不对啊。我这里说了使用 Codex 来编排进行深度阅读。
-   ```
+生成出的 child skill 不是只有一个匿名案例库。v1.1.12 要求 child skill 继承主包的方法论，包括：
 
-3. 生成 SemiDFL 领域专用 helper skill：`semidfl-contribution-helper.zip`；
-4. 在 Codex 中使用生成出的 `semidfl-contribution-helper.zip` 继续分析 SemiDFL；
-5. 在 ChatGPT 网页版中分别测试主包直接分析和使用已生成 helper skill 分析两种方式。
+- 启动菜单和模式/方向选择；
+- related-work intake；
+- submission-context gate；
+- L0-L4 分层改稿与科学升维；
+- 文献防幻觉和 source-quality gate；
+- edit-ready patch；
+- minimal decisive experiment planner；
+- revision loop；
+- figure/table、baseline fairness、citation support 检查；
+- child skill inheritance regression。
 
-v1.0.2 样例产物包括：
+如果继承检查失败，子 skill 不应标记为 production-ready。
 
-- `example_semiDFL_v1.0.2/semidfl.pdf`：样例中用来分析的目标论文；
-- `example_semiDFL_v1.0.2/semidfl-reframing-report.md`：v1.0.2 最终生成的论文优化报告；
-- `example_semiDFL_v1.0.2/semidfl-contribution-helper.zip`：根据 SemiDFL 生成的领域专用 helper skill；
-- `example_semiDFL_v1.0.2/codex-child-skill-generation-and-analysis.mp4`：在 Codex 中生成并使用领域专用 helper skill 的完整记录；
-- `example_semiDFL_v1.0.2/chatgpt-web-main-skill-direct-analysis.mhtml`：在 ChatGPT 网页版中使用 `paper-contribution-helper skill` 内置知识库直接分析论文的过程；
-- `example_semiDFL_v1.0.2/chatgpt-web-semidfl-helper-analysis.mhtml`：在 ChatGPT 网页版中使用 `semidfl-contribution-helper.zip` 分析论文的过程。
+## 架构图说明
 
-v1.0.8 样例产物包括：
+上方架构图描述的是 `paper-contribution-helper v1.1.12` 主包/skill factory 的整体工作流，不是某个领域子 skill 的内部图。
 
-- `example_semiDFL_v1.0.8/semidfl.pdf`：同一篇 SemiDFL 目标论文；
-- `example_semiDFL_v1.0.8/semidfl_contribution_report.md`：v1.0.8 生成的贡献包装报告，输出风格更偏直接的师生交流式说明；
-- `example_semiDFL_v1.0.8/fl-ssl-neurips-icml-2025-helper.zip`：v1.0.8 生成的联邦学习 / 半监督学习方向 helper skill；
-- `example_semiDFL_v1.0.8/codex-child-skill-generation-and-analysis.mp4`：在 Codex 中生成并使用新版领域 helper skill 的记录；
-- `example_semiDFL_v1.0.8/chatgpt-web-main-skill-direct-analysis.mhtml`：在 ChatGPT 网页版中使用主包内置知识库直接分析论文的过程；
-- `example_semiDFL_v1.0.8/chatgpt-web-semidfl-helper-analysis.mhtml`：在 ChatGPT 网页版中使用 v1.0.8 生成 helper skill 分析论文的过程。
+左侧输入目标论文、相关工作、reviews/replies、本地 PDF/project-run、研究领域、年份、来源和每年数量。中间主 skill 先通过启动菜单把任务拆成模式1/2/3 和 A-D 分析方向，再根据任务走直接论文分析、专业子 skill 构建或已有子 skill 更新。右侧输出包括目标论文贡献重构报告、edit-ready patches、最小实验计划、动态元图检索计划、可复用专业子 skill 和回归校验结果。
 
-报告中对 SemiDFL 的关键改写来自 v1.0.2 的 `semidfl-reframing-report.md`：
+内部资源分工保持模块化：
+
+- `SKILL.md`：只做启动菜单、路由和硬规则；
+- `references/`：存放工作流、报告 playbook、证据边界、source-quality、rebuttal、科学升维和子 skill 继承规则；
+- `scripts/`：负责语料发现、PDF 标准化、项目 run 校验、深读记录导入、匿名知识合成、打包和回归检查；
+- `assets/domain-skill-template/`：提供生成专业子 skill 的模板、脚本和继承结构。
+
+## SemiDFL v1.1.12 样例
+
+当前样例在 [`example_semiDFL_v1.1.12/`](example_semiDFL_v1.1.12/) 中，感谢 University of Bristol 的刘欣阳同学提供 SemiDFL 素材支持。
+
+目录说明：
+
+- [`example_semiDFL_v1.1.12/semidfl.pdf`](example_semiDFL_v1.1.12/semidfl.pdf)：样例目标论文；
+- [`example_semiDFL_v1.1.12/semidfl_contribution_report.md`](example_semiDFL_v1.1.12/semidfl_contribution_report.md)：v1.1.12 贡献包装分析报告；
+- [`example_semiDFL_v1.1.12/federated-semisupervised-iclr-helper.zip`](example_semiDFL_v1.1.12/federated-semisupervised-iclr-helper.zip)：样例生成出的联邦学习/半监督学习方向 helper skill；
+- [`example_semiDFL_v1.1.12/codex-child-skill-generation-and-analysis.mp4`](example_semiDFL_v1.1.12/codex-child-skill-generation-and-analysis.mp4)：Codex 中生成并使用 child skill 的记录；
+- [`example_semiDFL_v1.1.12/chatgpt-web-main-skill-direct-analysis.png`](example_semiDFL_v1.1.12/chatgpt-web-main-skill-direct-analysis.png)：ChatGPT 网页版中使用主包知识库直接分析的截图；
+- [`example_semiDFL_v1.1.12/chatgpt-web-federated-semisupervised-iclr-helper-analysis.png`](example_semiDFL_v1.1.12/chatgpt-web-federated-semisupervised-iclr-helper-analysis.png)：ChatGPT 网页版中使用已生成 helper skill 分析的截图。
+
+SemiDFL 的关键改写方向是：不要只讲“我们组合了 pseudo-labeling、diffusion MixUp 和 adaptive aggregation”，而要讲成：
 
 ```text
-SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, and builds a three-level consensus mechanism: label consensus for noisy pseudo supervision, data-space consensus for non-shareable heterogeneous data, and model-space consensus for aggregation without shared validation data.
+SemiDFL addresses the supervision-consensus gap in decentralized semi-supervised FL:
+without a server, labeled clients, unlabeled clients, and mixed clients cannot rely on
+centralized calibration or shared validation. SemiDFL builds consensus first in the data
+space and then in the model space, so pseudo-labels, generated samples, and aggregation
+weights become comparable across non-IID neighborhoods.
 ```
 
-简单说就是：
+换成更直接的话：SemiDFL 更强的主线不是“模块很多”，而是把去中心化半监督联邦学习里缺失的 supervision / data-space / model-space consensus 拆清楚，再用已有模块回答这些缺口。
+
+## Codex 提示词案例
+
+下面这些提示词来自 v1.1.12 的真实 Codex 使用流程，并做了路径泛化。实际使用时把文件名、领域、年份、来源和实验预算替换成自己的。
+
+### 1. 启动主包
 
 ```text
-这篇论文真正强的地方，是把 semi-supervised DFL 里的三个缺口拆清楚：没有可靠伪标签、没有可共享数据空间、没有共享验证集来决定谁的模型更可信。然后分别用 NPL、consensus diffusion MixUp、AdaGen 把这三个缺口接上。
+启动 paper-contribution-helper-v1.1.12.zip 里的skill
 ```
 
-## 如何使用
-
-### 在 Codex 中使用主包
-
-把这个 skill 的 zip 文件 `paper-contribution-helper-v1.0.2.zip` 放到 Codex 项目中，然后告诉 Codex 你要做哪一类任务：
+### 2. 用主包构建新的专业子 skill
 
 ```text
-我选择 A：直接分析 target-paper.pdf，帮我做贡献包装、审稿攻击预演和修改建议。
+直接使用paper-contribution-helper-v1.1.12.zip里的skill，模式1，方向A+B+C+D，研究领域=联邦学习+半监督学习，年份=2023+2024，每年数量=每年总共最多10篇，来源=iclr，构建子skill。
 ```
 
-或者：
+### 3. 用主包直接分析当前论文
 
 ```text
-我选择 B：请根据 target-paper.pdf 自动推断领域，并生成一个该方向可复用的领域专用 helper skill。参考年份 2023、2024，每年最多 10 篇；来源 iclr-openreview。
+直接使用paper-contribution-helper-v1.1.12.zip里的skill，模式2，方向A+B+C+D，分析这篇论文。目标venue是ICLR，截止时间=2026-09-30，最多还能补2个实验。
 ```
 
-### 在 ChatGPT 网页版中使用
-
-主包的完整工厂能力需要在 Codex 中运行，尤其是自动生成领域专用 helper skill。ChatGPT 网页版不能生成领域专用 helper skill；它只适合两种方式：直接用主包内置知识库分析论文，或使用已经在 Codex 中生成好的领域专用 helper skill。建议使用 Thinking Standard 模式。
-
-方式一：直接用主包内置知识库分析论文，不生成领域专用 skill。
-
-1. 建立一个 ChatGPT 项目；
-2. 把这个 skill 的 zip 文件 `paper-contribution-helper-v1.0.2.zip` 放进 Sources；
-3. 第一轮输入：
+### 4. 启动生成出的专业子 skill
+使用 zip：
 
 ```text
-启动 paper-contribution-helper skill
+启动 federated-semisupervised-iclr-helper.zip 里的skill
 ```
 
-4. 第二轮上传 PDF 后输入：
+### 5. 用专业子 skill 分析论文
 
 ```text
-方案A，直接分析semiDFL
+直接使用federated-semisupervised-iclr-helper.zip里的skill，模式A1，方向A+B+C+D，分析这篇论文 semidfl.pdf。目标venue是ICLR，截止时间=2025，最多还能补2个实验。
 ```
 
-方式二：使用已经生成好的领域专用 skill。
-
-1. 建立一个 ChatGPT 项目；
-2. 把 `semidfl-contribution-helper.zip` 放进 Sources；
-3. 第一轮输入：
+### 6. 更新/扩展已有专业子 skill
 
 ```text
-启动semidfl-contribution-helper.zip 里面的skill
+直接使用paper-contribution-helper-v1.1.12.zip里的skill，模式3，方向A+B+C+D，已有子skill=federated-semisupervised-iclr-helper.zip，研究领域=联邦学习+半监督学习，年份=2025+2026，每年数量=每年总共最多8篇，新增来源=iclr+neurips，本地资料=./new_papers，更新/扩展子skill。
 ```
 
-4. 第二轮上传 PDF 后输入：
+### 7. 从本地 PDF/project-run 构建
 
 ```text
-使用这个skill分析这篇文章
+直接使用paper-contribution-helper-v1.1.12.zip里的skill，模式1，方向A+B+C+D，研究领域=医疗图像分割+弱监督学习，年份=2022-2025，每年数量=每年总共最多12篇，来源=本地PDF，本地资料=./papers，构建子skill。
 ```
 
-## English README
+## ChatGPT 网页版边界
 
-`paper-contribution-helper skill` is a Codex skill factory for **A+B+C-style component-combination papers**, incremental papers, engineering-optimization papers, light method-transfer papers, and old-method-new-setting adaptation papers. Many graduate students and early-career researchers have real methods and experiments, but their papers are written as “we combine A, B, and C,” which makes reviewers attack novelty, incrementalism, mechanism evidence, baseline fairness, or scope. This skill is built for that pain point: it helps turn existing methods, experiments, and constraints into a clearer, stronger, evidence-grounded contribution narrative. Thanks to Xinyang Liu from the University of Bristol for providing the SemiDFL materials.
+主包的完整工厂能力应在 Codex 中运行，尤其是自动发现/下载语料、全文深读、生成和回归检查专业子 skill。ChatGPT 网页版更适合两类轻量用法：
 
-> Version note: The main README still follows the original `paper-contribution-helper v1.0.2` usage flow. `paper-contribution-helper v1.0.8` mainly improves the **report output experience**: the default report is more direct and student-advisor-like, with conclusions first, then reasons and revision suggestions. `paper-contribution-helper v1.0.8` is recommended for use; its usage is the same as v1.0.2.
+1. 把 `paper-contribution-helper-v1.1.12.zip` 放进项目 Sources，直接用主包知识库分析论文；
+2. 把已经在 Codex 中生成好的专业子 skill zip （federated-semisupervised-iclr-helper.zip） 放进 Sources，分析同方向论文。
+3. 把要分析的论文 `semidfl.pdf` 也放进 Sources。
 
-![paper-contribution-helper skill architecture, English](paper-contribution-helper-skill-architecture-en.png)
+ChatGPT 网页版不适合作为完整的子 skill 构建环境。
 
-There are two core ways to use it. First, you can directly use the main package’s built-in contribution-framing knowledge base to analyze a target paper and quickly obtain contribution framing, novelty defense, reviewer attack preplay, and revision plans. Second, **in Codex**, you can use the target paper as a seed, collect related papers, reviews, author replies, and meta-reviews, then generate a reusable domain-specific helper skill for future papers in the same area. **ChatGPT web cannot generate a domain-specific helper skill**; it can only directly use the main package’s built-in knowledge base, or use a child skill already generated in Codex.
+### ChatGPT 网页版提示词示例
 
-Note: If the Codex run stops with a message like “The final skill zip has not been generated. The reason is that the current environment does not have OPENAI_API_KEY, acpx, or a local LLM backend,” reply:
+#### 直接分析的两步
+
+第一步，启动 Sources 里的主包：
 
 ```text
-No, that is not right. I said to use Codex to orchestrate the deep-reading process.
+启动 Sources 里 paper-contribution-helper-v1.1.12.zip 里的skill
 ```
 
-In the SemiDFL example, the key rewrite is not to keep emphasizing “we combine several modules,” but to move the paper from a **component-combination paper** to an **interface-closure paper**.
-
-| Easy to Read As | Stronger Contribution Narrative |
-| --- | --- |
-| Combining NPL, diffusion MixUp, and AdaGen | Semi-supervised DFL lacks three consensus interfaces; SemiDFL closes the label-space, data-space, and model-space interfaces |
-| Experiments only show higher accuracy | Experiments are organized around reviewer-facing failure modes: label scarcity, non-IID robustness, pseudo-supervision quality, data-space consensus, and model-space consensus |
-
-The point is not to invent new experiments or overclaim. The point is to align the real problem solved by the paper, the evidence already present in the paper, and the defenses reviewers will expect.
-
-The core principle is **strong but honest**: do not fabricate, exaggerate, or claim beyond the paper. Instead, recover the real value already present in the work and turn a paper that looks like a combination, incremental improvement, or engineering optimization into a clearer, bounded, and more defensible submission narrative.
-
-### Why This Is Needed
-
-These papers are not necessarily unpublishable, but they are difficult to get accepted. Reviewers can easily read them as “a combination of existing methods A+B+C,” “a small tweak on an old method,” or “a complete engineering system without a clear scientific question.” Once the paper fails to explain contribution boundaries, necessity, and mechanism evidence, reviewers often attack:
-
-- weak novelty or incremental tweak risk;
-- direct composition of existing components;
-- contribution bullets that only say “we add A, B, and C”;
-- unclear boundaries with related work;
-- ablations that do not explain which failure mode each module solves;
-- missing defenses for baseline fairness, scope, cost, or reproducibility;
-- rebuttals that collapse into vague “we clarify” or “we will add discussion” responses.
-
-The skill exposes these risks early and reorganizes the paper’s existing material into a clearer, more defensible submission story.
-
-### What It Can Do
-
-#### 1. Directly Analyze a Target Paper
-
-Use this when you already have a paper PDF and want to know how to frame it more strongly.
-
-Main outputs include:
-
-- which incremental-risk category the paper is most likely to be attacked as;
-- what the defensible contribution level actually is;
-- which real strengths already exist in the paper but are under-explained;
-- how to revise the abstract, introduction, contribution bullets, related work, and method overview;
-- how reviewers may attack novelty, A+B/C composition, baselines, mechanisms, experiments, and reproducibility;
-- what can be improved without new experiments, and what should be prioritized if new evidence is needed;
-- what can safely be said in rebuttal, and which risky rhetorical patterns to avoid.
-
-#### 2. Generate a Reusable Domain-Specific Helper Skill
-
-Use this when you expect to write more papers in the same area, or want to preserve reusable review and framing knowledge for a research direction.
-
-In Codex, the main package can infer the domain/subdomain from a target paper, collect related papers, reviews, author replies, and meta-reviews, anonymize reusable patterns, and generate a domain-specific helper skill. The generated child skill can then help future papers reuse:
-
-- strong framing routes common in the area;
-- recurring reviewer attack patterns;
-- effective rebuttal patterns;
-- anonymized case-derived story routes and defense logic.
-
-### Architecture
-
-The English architecture figure above describes the overall `paper-contribution-helper` skill / skill factory, not the SemiDFL-specific child skill.
-
-The left side provides the target paper and supporting materials. The middle `paper-contribution-helper` diagnoses contribution risks, recovers under-explained strengths, preplays reviewer attacks, proposes layered revision plans, and distills the experience into a domain-specific helper skill. The right side shows the generated child skill, which stores anonymized cases, recurring reviewer concerns, rebuttal patterns, and story routes for future reuse.
-
-The modules are direct: contribution diagnosis tells you how the paper will be questioned; strength mining recovers real value already present in the paper; reviewer preplay surfaces novelty, A+B/C, baseline, and mechanism risks; layered revision separates no-new-experiment wording fixes from evidence-reorganization and true additional-evidence needs; domain generation turns one paper’s experience into a reusable area-level assistant.
-
-The internal resources stay simple: `SKILL.md` controls entry points, rules, and output formats; `references/` stores contribution-framing methods, anonymized cases, reviewer attacks, and rebuttal patterns; `scripts/` supports material organization, case extraction, packaging, and validation; `assets/` provides templates and structures for generated domain skills. In the packaged resources, `paper-contribution-helper-v1.0.2.zip` is the v1.0.2 zip package for `paper-contribution-helper skill`.
-
-### SemiDFL Example Results
-
-`example_semiDFL_v1.0.2/` is the original v1.0.2 end-to-end example, and the main README still follows this flow: how to generate a SemiDFL-specific helper skill from the main package, then how to use that generated helper skill in Codex and ChatGPT web. `example_semiDFL_v1.0.8/` is the same SemiDFL example rerun with v1.0.8, and its report output is recommended for review.
-
-**v1.0.2 full optimization report: [`example_semiDFL_v1.0.2/semidfl-reframing-report.md`](example_semiDFL_v1.0.2/semidfl-reframing-report.md).**
-
-**v1.0.8 recommended report: [`example_semiDFL_v1.0.8/semidfl_contribution_report.md`](example_semiDFL_v1.0.8/semidfl_contribution_report.md).**
-
-In this example, the domain corpus intentionally uses papers from 2023 and 2024 because SemiDFL is a 2025 paper. To simulate a realistic pre-submission setting where only earlier public work is available, and to avoid leaking later or contemporaneous material back into the domain helper skill, the example only uses papers published before the target paper. The domain corpus is small not because the area lacks papers, but because this public demo did not have enough token budget; in actual use, the year range, venues, and number of papers per year can be expanded according to the available budget.
-
-The example workflow is:
-
-1. Use `semidfl.pdf` as the target paper.
-2. Use `paper-contribution-helper skill` to analyze SemiDFL’s contribution, novelty risks, and reviewer defenses.
-
-   Note: If the Codex run stops with a message like “The final skill zip has not been generated. The reason is that the current environment does not have OPENAI_API_KEY, acpx, or a local LLM backend,” reply:
-
-   ```text
-   No, that is not right. I said to use Codex to orchestrate the deep-reading process.
-   ```
-
-3. Generate the SemiDFL-specific helper skill: `semidfl-contribution-helper.zip`.
-4. In Codex, use the generated `semidfl-contribution-helper.zip` to continue analyzing SemiDFL.
-5. In ChatGPT web, test two supported modes: direct analysis with the main package, and analysis with the already generated helper skill.
-
-v1.0.2 example artifacts:
-
-- `example_semiDFL_v1.0.2/semidfl.pdf`: target paper used in the example;
-- `example_semiDFL_v1.0.2/semidfl-reframing-report.md`: final v1.0.2 paper optimization report;
-- `example_semiDFL_v1.0.2/semidfl-contribution-helper.zip`: SemiDFL-specific generated helper skill;
-- `example_semiDFL_v1.0.2/codex-child-skill-generation-and-analysis.mp4`: full Codex recording for generating and using the child skill;
-- `example_semiDFL_v1.0.2/chatgpt-web-main-skill-direct-analysis.mhtml`: ChatGPT web process using the main package’s built-in knowledge base;
-- `example_semiDFL_v1.0.2/chatgpt-web-semidfl-helper-analysis.mhtml`: ChatGPT web process using `semidfl-contribution-helper.zip`.
-
-v1.0.8 example artifacts:
-
-- `example_semiDFL_v1.0.8/semidfl.pdf`: the same SemiDFL target paper;
-- `example_semiDFL_v1.0.8/semidfl_contribution_report.md`: v1.0.8 contribution-framing report with a more direct student-advisor-style output;
-- `example_semiDFL_v1.0.8/fl-ssl-neurips-icml-2025-helper.zip`: v1.0.8 generated helper skill for federated learning / semi-supervised learning;
-- `example_semiDFL_v1.0.8/codex-child-skill-generation-and-analysis.mp4`: Codex recording for generating and using the updated domain helper skill;
-- `example_semiDFL_v1.0.8/chatgpt-web-main-skill-direct-analysis.mhtml`: ChatGPT web process using the main package’s built-in knowledge base;
-- `example_semiDFL_v1.0.8/chatgpt-web-semidfl-helper-analysis.mhtml`: ChatGPT web process using the v1.0.8 generated helper skill.
-
-Key SemiDFL rewrite from the v1.0.2 `semidfl-reframing-report.md`:
+第二步，直接分析论文：
 
 ```text
-SemiDFL identifies the missing consensus interfaces that make SSL hard in DFL, and builds a three-level consensus mechanism: label consensus for noisy pseudo supervision, data-space consensus for non-shareable heterogeneous data, and model-space consensus for aggregation without shared validation data.
+直接使用 paper-contribution-helper-v1.1.12.zip 里的skill，模式2，方向A+B+C+D，分析这篇论文 [semidfl.pdf](semidfl.pdf)。截止时间=2025，最多还能补2个实验。
 ```
 
-Simply put:
+#### 使用子 skill 分析的两步
+
+第一步，启动 Sources 里的子 skill：
 
 ```text
-The real strength of the paper is that it identifies three missing interfaces in semi-supervised DFL: no reliable pseudo-labels, no shareable data space, and no shared validation set for deciding which models are trustworthy. NPL, consensus diffusion MixUp, and AdaGen are then framed as closing these three interfaces.
+启动 federated-semisupervised-iclr-helper.zip 里的skill
 ```
 
-### How To Use
-
-#### In Codex
-
-Put the skill zip file `paper-contribution-helper-v1.0.2.zip` in your Codex project, then choose one task:
+第二步，用子 skill 分析论文：
 
 ```text
-Option A: Directly analyze target-paper.pdf and help me with contribution framing, reviewer attack preplay, and revision suggestions.
+直接使用federated-semisupervised-iclr-helper.zip里的skill，模式A1，方向D，分析 Sources 里的 semidfl.pdf。截止时间=2025，最多还能补2个实验。
 ```
 
-Or:
+---
+
+# Paper Contribution Helper v1.1.12
+
+`paper-contribution-helper skill` is a Codex skill factory for contribution framing, novelty-risk diagnosis, reviewer-defense preparation, and reusable domain-helper generation. It is designed for A+B+C-style component-combination papers, incremental papers, engineering-heavy systems, light method-transfer papers, and old-method-new-setting adaptation papers.
+
+This README only describes `paper-contribution-helper v1.1.12`. Older packages, README files, architecture figures, and examples are archived under [`old_versions/`](old_versions/).
+
+Current package: [`paper-contribution-helper-v1.1.12.zip`](paper-contribution-helper-v1.1.12.zip)
+
+![paper-contribution-helper v1.1.12 architecture](paper-contribution-helper-skill-architecture-en.png)
+
+## What v1.1.12 Does
+
+The skill has three explicit work modes:
+
+| Mode | Purpose |
+|---|---|
+| Mode 1 | Build a new domain-specific helper skill from target papers, related work, local PDFs, project runs, or specified source pools. |
+| Mode 2 | Analyze a target paper directly with the main package, without generating a new skill. |
+| Mode 3 | Update or extend an existing domain helper skill with new papers, reviews, sources, or workflows. |
+
+For paper analysis, A-D directions can be combined:
+
+- **A**: contribution, related work, novelty risk, closest prior, baselines, claim-evidence-risk.
+- **B**: L0-L4 revision, from wording and structure to failure modes, broken assumptions, and scientific-question elevation.
+- **C**: reviewer/AC attack preplay, rebuttal-safe wording, minimal decisive experiments, revision loop.
+- **D**: dynamic meta-graph, multi-hop literature plan, no-hallucination literature guard, quality gates, local knowledge-base construction.
+
+## Key v1.1.12 Behavior
+
+- It starts with a fixed menu and asks the user to choose mode and analysis directions instead of guessing the route.
+- Direct target-paper analysis runs related-work intake and submission-context gates before producing a final report.
+- Reports are action-oriented: claim-evidence-risk maps, closest-prior boundaries, edit-ready patches, minimal decisive experiments, reviewer attack preplay, figure/table checks, baseline fairness, and citation support.
+- Child-skill construction treats multiple fields, years, sources, and local material sets as OR candidate pools by default. If several fields and years are supplied, it builds a balanced field-by-year quota plan and reports gaps honestly.
+- Existing local PDFs, reviews, replies, metadata, and project runs have priority. Missing API keys or LLM backends are handoffs to local-file processing, not automatic terminal blockers.
+- Generated child skills must inherit the parent methodology and pass startup, evidence, source-quality, execution-flow, and child-inheritance regression checks.
+
+## Architecture
+
+The architecture figure shows the main `paper-contribution-helper v1.1.12` package, not a single generated domain helper. Inputs include target papers, related work, local PDFs/project-runs, research fields, years, source pools, and per-year quotas. The main skill routes the task through Mode 1/2/3 and A-D directions, then either analyzes a target paper, builds a reusable domain helper, or updates an existing helper.
+
+Internally:
+
+- `SKILL.md` owns the startup menu and routing rules.
+- `references/` stores workflow modules, report playbooks, evidence boundaries, source-quality gates, rebuttal rules, scientific-elevation guidance, and child-skill inheritance contracts.
+- `scripts/` handles source discovery, local PDF normalization, project-run validation, deep-read record import, anonymous synthesis, packaging, and regression checks.
+- `assets/domain-skill-template/` renders portable generated helper skills.
+
+## SemiDFL Example
+
+The current example is under [`example_semiDFL_v1.1.12/`](example_semiDFL_v1.1.12/):
+
+Example directory contents:
+
+- [`example_semiDFL_v1.1.12/semidfl.pdf`](example_semiDFL_v1.1.12/semidfl.pdf): sample target paper.
+- [`example_semiDFL_v1.1.12/semidfl_contribution_report.md`](example_semiDFL_v1.1.12/semidfl_contribution_report.md): v1.1.12 contribution-framing analysis report.
+- [`example_semiDFL_v1.1.12/federated-semisupervised-iclr-helper.zip`](example_semiDFL_v1.1.12/federated-semisupervised-iclr-helper.zip): generated helper skill for federated learning / semi-supervised learning.
+- [`example_semiDFL_v1.1.12/codex-child-skill-generation-and-analysis.mp4`](example_semiDFL_v1.1.12/codex-child-skill-generation-and-analysis.mp4): Codex recording for generating and using the child skill.
+- [`example_semiDFL_v1.1.12/chatgpt-web-main-skill-direct-analysis.png`](example_semiDFL_v1.1.12/chatgpt-web-main-skill-direct-analysis.png): ChatGPT web screenshot for direct analysis with the main package.
+- [`example_semiDFL_v1.1.12/chatgpt-web-federated-semisupervised-iclr-helper-analysis.png`](example_semiDFL_v1.1.12/chatgpt-web-federated-semisupervised-iclr-helper-analysis.png): ChatGPT web screenshot for analysis with the generated helper skill.
+
+The stronger SemiDFL framing is not “we combine pseudo-labeling, diffusion MixUp, and adaptive aggregation.” It is:
 
 ```text
-Option B: Infer the domain from target-paper.pdf and generate a reusable domain-specific helper skill. Use reference years 2023 and 2024, up to 10 papers per year, from iclr-openreview.
+SemiDFL addresses the supervision-consensus gap in decentralized semi-supervised FL:
+without a server, labeled clients, unlabeled clients, and mixed clients cannot rely on
+centralized calibration or shared validation. SemiDFL builds consensus first in the data
+space and then in the model space, so pseudo-labels, generated samples, and aggregation
+weights become comparable across non-IID neighborhoods.
 ```
 
-#### In ChatGPT Web
+## Codex Prompt Examples
 
-The full factory workflow must run in Codex, especially domain-specific helper-skill generation. ChatGPT web cannot generate a domain-specific helper skill. It supports only two modes: directly analyzing a paper with the main package’s built-in knowledge base, or using a domain-specific helper skill already generated in Codex. Thinking Standard mode is recommended.
+These prompts come from the real v1.1.12 Codex workflow, with paths generalized. Replace filenames, fields, years, sources, and experiment budgets as needed.
 
-Mode 1: Directly analyze a paper with the main package’s built-in knowledge base.
-
-1. Create a ChatGPT project.
-2. Add the skill zip file `paper-contribution-helper-v1.0.2.zip` to Sources.
-3. First prompt:
+### 1. Start The Main Package
 
 ```text
-启动 paper-contribution-helper skill
+Start the skill inside paper-contribution-helper-v1.1.12.zip.
 ```
 
-4. After uploading the PDF, prompt:
+### 2. Build A New Domain Helper With The Main Package
 
 ```text
-方案A，直接分析semiDFL
+Directly use the skill inside paper-contribution-helper-v1.1.12.zip. Mode 1, directions A+B+C+D, research fields=federated learning + semi-supervised learning, years=2023+2024, per-year quota=up to 10 papers total per year, source=ICLR, build a child skill.
 ```
 
-Mode 2: Use an already generated domain-specific helper skill.
-
-1. Create a ChatGPT project.
-2. Add `semidfl-contribution-helper.zip` to Sources.
-3. First prompt:
+### 3. Analyze The Current Paper Directly With The Main Package
 
 ```text
-启动semidfl-contribution-helper.zip 里面的skill
+Directly use the skill inside paper-contribution-helper-v1.1.12.zip. Mode 2, directions A+B+C+D, analyze this paper. Target venue=ICLR, deadline=2026-09-30, at most 2 additional experiments can still be added.
 ```
 
-4. After uploading the PDF, prompt:
+### 4. Start A Generated Child Skill
 
 ```text
-使用这个skill分析这篇文章
+Start the skill inside federated-semisupervised-iclr-helper.zip.
+```
+
+### 5. Analyze A Paper With A Generated Child Skill
+
+```text
+Directly use the skill inside federated-semisupervised-iclr-helper.zip. Mode A1, directions A+B+C+D, analyze this paper semidfl.pdf. Target venue=ICLR, deadline=2025, at most 2 additional experiments can still be added.
+```
+
+### 6. Update Or Extend An Existing Child Skill
+
+```text
+Directly use the skill inside paper-contribution-helper-v1.1.12.zip. Mode 3, directions A+B+C+D, existing child skill=federated-semisupervised-iclr-helper.zip, research fields=federated learning + semi-supervised learning, years=2025+2026, per-year quota=up to 8 papers total per year, new sources=ICLR+NeurIPS, local materials=./new_papers, update/extend the child skill.
+```
+
+### 7. Build From Local PDFs Or A Project Run
+
+```text
+Directly use the skill inside paper-contribution-helper-v1.1.12.zip. Mode 1, directions A+B+C+D, research fields=medical image segmentation + weakly supervised learning, years=2022-2025, per-year quota=up to 12 papers total per year, source=local PDFs, local materials=./papers, build a child skill.
+```
+
+## ChatGPT Web Boundary
+
+Run the full factory workflow in Codex when you need corpus discovery, full-paper reading, child-skill generation, packaging, or regression checks. ChatGPT web is better for two lightweight uses:
+
+1. Put `paper-contribution-helper-v1.1.12.zip` in project Sources and analyze a paper directly with the main package knowledge base.
+2. Put an already generated domain helper skill zip (`federated-semisupervised-iclr-helper.zip`) in Sources and analyze a paper in the same direction.
+3. Put the target paper `semidfl.pdf` in Sources as well.
+
+ChatGPT web is not suitable as the full child-skill construction environment.
+
+### ChatGPT Web Prompt Examples
+
+#### Direct Analysis In Two Turns
+
+Turn 1, start the main package from Sources:
+
+```text
+Start the skill inside paper-contribution-helper-v1.1.12.zip from Sources.
+```
+
+Turn 2, analyze the paper directly:
+
+```text
+Directly use the skill inside paper-contribution-helper-v1.1.12.zip. Mode 2, directions A+B+C+D, analyze this paper [semidfl.pdf](semidfl.pdf). Deadline=2025, at most 2 additional experiments can still be added.
+```
+
+#### Child Skill Analysis In Two Turns
+
+Turn 1, start the child skill from Sources:
+
+```text
+Start the skill inside federated-semisupervised-iclr-helper.zip.
+```
+
+Turn 2, analyze the paper with the child skill:
+
+```text
+Directly use the skill inside federated-semisupervised-iclr-helper.zip. Mode A1, direction D, analyze semidfl.pdf from Sources. Deadline=2025, at most 2 additional experiments can still be added.
 ```
